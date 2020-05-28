@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace RepeatingApiRoutes.Routing
+namespace RepeatingApiRoute.Routing
 {
     public class RouteValueRepeatTransformer : DynamicRouteValueTransformer, IModelBinderProvider, IModelBinder
     {
@@ -23,7 +23,10 @@ namespace RepeatingApiRoutes.Routing
             var key = bindingContext.ModelName;
             if (bindingContext.ActionContext.RouteData.Values.TryGetValue(key, out var value))
             {
-                bindingContext.Result = ModelBindingResult.Success(value);
+                if (bindingContext.ModelType == value.GetType())
+                {
+                    bindingContext.Result = ModelBindingResult.Success(value);
+                }
             }
             return Task.CompletedTask;
         }
