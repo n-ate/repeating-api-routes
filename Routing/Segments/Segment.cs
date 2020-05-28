@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RepeatingApiRoutes.Routing
+namespace RepeatingApiRoutes.Segments
 {
     public class Segment
     {
@@ -24,16 +24,16 @@ namespace RepeatingApiRoutes.Routing
                 value = templateParts.First();
                 this.RepeatAsKey = templateParts.Last().TrimEnd(ValueStop);
             }
-            var parts = new List<Part>();
+            var parts = new List<SegmentPart>();
             var previousIndex = 0;
             var index = value.IndexOfAny(ValueBounds, 0);
-            if (index == -1) parts.Add(new Part(value, true));
+            if (index == -1) parts.Add(new SegmentPart(value, true));
             while (index != -1)
             {
                 var isLiteral = value[index] != ValueStop;//if value bounds stop then it is a value segment
                 if (index != previousIndex)
                 {
-                    var part = new Part(value.Substring(previousIndex, index - previousIndex), isLiteral);
+                    var part = new SegmentPart(value.Substring(previousIndex, index - previousIndex), isLiteral);
                     if (parts.Any()) parts.Last().Next = part;
                     parts.Add(part);
                 }
@@ -45,11 +45,26 @@ namespace RepeatingApiRoutes.Routing
 
         public bool IsLiteral { get; }
         public bool IsRepeating { get; }
-        public Part[] Parts { get; }
+        public SegmentPart[] Parts { get; }
         public string RepeatAsKey { get; }
         public string Value { get; }
 
-        public bool IsMatch(string segment, out KeyValuePair<string, object>[] data)
+        public RequestData[] GetMatchingRequestSegments(string[] requestSegments)
+        {
+            var result = new List<RequestData>();
+            var tryToMatchNumber = this.IsRepeating ? requestSegments.Length : 1;
+            for (var i = 0; i < tryToMatchNumber; i++)
+            {
+                if (this.IsMatch(requestSegments[i], out RequestData requestData))
+                {
+                    result.Add(requestData);
+                }
+                else break;
+            }
+            return result.ToArray();
+        }
+
+        public bool IsMatch(string segment, out RequestData data)
         {
             var result = new List<KeyValuePair<string, object>>();
             bool isMatch = true;
@@ -78,39 +93,8 @@ namespace RepeatingApiRoutes.Routing
                     }
                 }
             }
-            data = result.ToArray();
+            data = new RequestData(result);
             return isMatch;
-        }
-
-        public class Part
-        {
-            public Part(string value, bool isLiteral)
-            {
-                this.Value = value;
-                this.IsLiteral = isLiteral;
-            }
-
-            public bool IsLiteral { get; }
-            public Part Next { get; internal set; }
-            public string Value { get; }
-
-            public int IsMatch(string segment)
-            {
-                int length;
-                if (this.IsLiteral)//match length is equal to the length of the route part value
-                {
-                    length = segment.StartsWith(this.Value) ? this.Value.Length : -1;
-                }
-                else if (this.Next != null)//match length is equal to the length to the next part match
-                {
-                    length = segment.IndexOf(this.Next.Value);
-                }
-                else//match length is the entire segment
-                {
-                    length = segment.Length;
-                }
-                return length;
-            }
         }
     }
 }
