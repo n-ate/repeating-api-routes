@@ -19,6 +19,7 @@ Limitation: currently only simple types are supported and all of the values in a
 
 ### Controller Action Method Examples:
 ```
+//HTTP Usage: People/Tim/John/Marry/Beth/Walley
 [HttpGet("People/~{name}as{names}")]
 public async Task<IActionResult> SearchByColumn((string)[] names)
 {
@@ -26,6 +27,7 @@ public async Task<IActionResult> SearchByColumn((string)[] names)
 }
 ```
 ```
+//HTTP Usage: Search/Column1:some-value/Column2:value/IdColumn:value
 [HttpGet("Search/~{column}:{value}as{values}")]
 public async Task<IActionResult> SearchByColumn((string, string)[] values)
 {
@@ -33,6 +35,7 @@ public async Task<IActionResult> SearchByColumn((string, string)[] values)
 }
 ```
 ```
+//HTTP Usage: Vertices/5:2.5:0/1:1:1
 [HttpGet("Vertices/~{x}:{y}:{z}as{vertices}")]
 public async Task<IActionResult> SearchByColumn((float, float, float)[] vertices)
 {
